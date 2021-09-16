@@ -7,7 +7,7 @@
                             <li><a href="about_us.php">About us</a></li>
                             <li><a href="#special-menu">Offer</a></li>
                             <li><a href="menu.php">Menu</a></li>
-                            <li><a href="#">Dropdown
+                            <li><a href="#">Special
                                 <i class="indicator-desktop fa fa-angle-down"></i> </a> <!-- Desktop sub menu indicator icon -->
                                 <i class="indicator-mobile fa fa-angle-down"></i>       <!-- Mobile view sub menu indicator icon -->
 
