@@ -290,7 +290,7 @@ a type specimen book. It has survived not only five centuries simply dummy text 
                     <!-- Image Right -->
                     <div class="col-xs-12 col-sm-12 col-md-4 col-lg-4">
                         <div class="img">
-                        <figure> <img src="assets/images/special-menu-img2.jpg" alt="special-menu-img2" > </figure>
+                        <figure> <img src="assets/images/special-menu-img2.jpg" alt="special-menu-img2"> </figure>
                         </div>
                     </div>
                     

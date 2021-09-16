@@ -2,6 +2,7 @@
   require_once "partials/_sidebar.php";
   date_default_timezone_set('Asia/Dhaka'); ?>
   <?php
+  $msg = '';
     $product='';
     $sql = "SELECT * FROM products";
     $result = $mysqli->query($sql);
@@ -24,12 +25,14 @@
 
 
     if(isset($_POST['submit'])){
-      $sql = "INSERT INTO orders (bill_no, date_time, gross_amount, service_charge_rate, service_charge_amount, vat_charge_rate, vat_charge_amount, discount, net_amount, table_id, paid_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
+      
       // mysqli_prepare($mysqli, $sql);
       $ins = $mysqli->prepare($sql);
 		  $user_id = 1;
 		  $bill_no = 'BILPR-'.strtoupper(substr(md5(uniqid(mt_rand(), true)), 0, 4));
-    	$data = array(
+    	$date_time = strtotime(date('Y-m-d h:i:s a'));
+      
+      /*$data = array(
     		'bill_no' => $bill_no,
     		'date_time' => strtotime(date('Y-m-d h:i:s a')),
     		'gross_amount' => $_POST['gross_amount'],
@@ -43,31 +46,37 @@
     		'table_id' => $_POST['table_name'],
     		'store_id' => 1,
         'paid_status' => $_POST['payment']
-    	);
+    	);*/
+      $sqlIns = "INSERT INTO orders (bill_no, date_time, gross_amount, service_charge_rate, service_charge_amount, vat_charge_rate, vat_charge_amount, discount, net_amount, table_id, paid_status) VALUES ('$bill_no', '$date_time', '".$_POST['gross_amount']."', '0','0', '$vat', '".$_POST['vat_charge']."', '".$_POST['net_amount']."', '0', '$user_id', '".$_POST['table_name']."','".$_POST['payment']."');";
 
-      $ins->bind_param('oa', $data);
-      $ins->execute();
+      mysqli_query($mysqli, $sqlIns);
+      $order_id = mysqli_insert_id($mysqli);
 
-      $lis = $mysqli->query("SELECT LAST_INSERT_ID()");
-      $order_id = $lis->num_rows;
+      // $lis = $mysqli->query("SELECT LAST_INSERT_ID()");
+      // $order_id = $lis->num_rows;
 
-		// $insert = $this->db->insert('orders', $data);
-		// $order_id = $this->db->insert_id();
+      // $insert = $this->db->insert('orders', $data);
+      // $order_id = $this->db->insert_id();
 
-		$count_product = count($_POST['product']);
-    	for($x = 0; $x < $count_product; $x++) {
-    		$items = array(
-    			'order_id' => $order_id,
-    			'product_id' => $_POST['product'][$x],
-    			'qty' => $_POST['qty'][$x],
-    			'rate' => $_POST['rate_value'][$x],
-    			'amount' => $_POST['amount_value'][$x],
-    		);
+		  $count_product = count($_POST['product']);
+        for($x = 0; $x < $count_product; $x++) {
+          $query = "INSERT INTO `order_items` (`order_id`, `product_id`, `quantity`, `rate`, `amount`) VALUES ('$order_id','".$_POST['product'][$x]."', '".$_POST['qty'][$x]."', '".$_POST['qty'][$x]."', '".$_POST['rate'][$x]."', '".$_POST['amount'][$x]."')";
+          /*$items = array(
+            'order_id' => $order_id,
+            'product_id' => $_POST['product'][$x],
+            'qty' => $_POST['qty'][$x],
+            'rate' => $_POST['rate_value'][$x],
+            'amount' => $_POST['amount_value'][$x],
+          );*/
 
-        $query = "INSERT INTO `order_items` (`order_id`, `product_id`, `product_name`, `quantity`, `rate`, `amount`) VALUES (`order_id`, `product_id`, `product_name`, `quantity`, `rate`, `amount`)";
-        $pins = $mysqli->prepare($query);
-        $pins->bind_param('xs', $items);
+          mysqli_query($mysqli, $query);
+
     	}
+      if($mysqli->affected_rows){
+        $msg = "<span class='alert alert-success alert-dismissible'>Added successfully</span>";
+      } else {
+        $msg = "error";
+      }
 
     }
     
@@ -104,6 +113,10 @@
     <div class="box">
           <div class="box-header">
             <h3 class="box-title">Add Order</h3>
+            <br><br>
+            <div><?php echo $msg?></div>
+            
+            <br>
           </div>
           <!-- /.box-header -->
           <form role="form" action="" method="post" class="form-horizontal">
@@ -147,7 +160,7 @@
                    <tr >
                       <td colspan="2"></td>
                       <th>Gross Amount</th>
-                      <td><input type="text" class="form-control" value="" id="gross_amount" name="gross_amount" disabled>
+                      <td><input type="text" class="form-control" value="" id="gross_amount" name="gross_amount">
                       <input type="hidden" class="form-control" id="gross_amount_value" name="gross_amount_value" autocomplete="off"></td>
                       <td></td>
                       
@@ -156,13 +169,15 @@
                     <tr>
                       <td colspan="2"></td>
                       <th style="width:10%">Vat <?php echo $vat ;?> %</th>
-                      <td><input type="text" class="form-control" id="vat_charge" name="vat_charge" disabled></td>
+                      <td><input type="text" class="form-control" id="vat_charge" name="vat_charge" >
+                      <input type="text" class="form-control" id="vat_charge_value" name="vat_charge" hidden></td>
                       <td></td>
                     </tr>
                     <tr>
                       <td colspan="2"></td>
                       <th style="width:10%">Net Amount</th>
-                      <td><input type="text" class="form-control" id="net_amount" name="net_amount" disabled></td>
+                      <td><input type="text" class="form-control" id="net_amount" name="net_amount" >
+                      <input type="text" class="form-control" id="net_amount" name="totalAmountValue" hidden></td>
                       <td></td>
                     </tr>
                     <tr>
@@ -212,7 +227,7 @@
 
       html += '<td><input type="text" name="rate[]" id="rate_'+i+'" data-product-price='+i+' class="form-control pdt_price" autocomplete="off"><input type="hidden" name="rate_value[]" id="rate_value_'+i+'" class="form-control"></td>';
 
-      html += '<td><input type="text" name="amount[]" id="amount_'+i+'" class="form-control" disabled autocomplete="off"><input type="hidden" name="amount_value[]" id="amount_value_'+i+'" class="form-control"></td>';
+      html += '<td><input type="text" name="amount[]" id="amount_'+i+'" class="form-control" autocomplete="off"><input type="hidden" name="amount_value[]" id="amount_value_'+i+'" class="form-control"></td>';
 
       html += '<td><button name="remove" id="'+i+'" type="button" class="btn btn-default btn_remove"><i class="far fa-window-close"></i></button></td>';
 
@@ -308,7 +323,7 @@
       var totalAmount = (Number(totalSubAmount) + Number(vat));
       totalAmount = totalAmount.toFixed(2);
       $("#net_amount").val(totalAmount);
-      // $("#totalAmountValue").val(totalAmount);
+      $("#totalAmountValue").val(totalAmount);
 
     }
 
