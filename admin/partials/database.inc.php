@@ -1,0 +1,1 @@
+<?php $mysqli = new mysqli('localhost','root','','wdpf47_rms') ?>
